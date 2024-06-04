@@ -1,1 +1,115 @@
+#include <opencv2/opencv.hpp>
+#include <iostream>
+#include <vector>
+#include <deque>
 
+using namespace cv;
+using namespace std;
+
+void detectBalls(Mat frame, vector<Vec3f>& balls) {
+    Mat hsv_image;
+    cvtColor(frame, hsv_image, COLOR_BGR2HSV);
+
+    
+    Scalar lower_range_cue_ball = Scalar(0, 0, 200);
+    Scalar upper_range_cue_ball = Scalar(10, 10, 255);
+    Scalar lower_range_8_ball = Scalar(0, 0, 0);
+    Scalar upper_range_8_ball = Scalar(10, 10, 50);
+    Scalar lower_range_solid_balls = Scalar(0, 100, 100);
+    Scalar upper_range_solid_balls = Scalar(10, 255, 255);
+    Scalar lower_range_striped_balls = Scalar(100, 100, 100);
+    Scalar upper_range_striped_balls = Scalar(150, 255, 255);
+
+  
+    Mat mask_cue_ball = inRange(hsv_image, lower_range_cue_ball, upper_range_cue_ball);
+    Mat mask_8_ball = inRange(hsv_image, lower_range_8_ball, upper_range_8_ball);
+    Mat mask_solid_balls = inRange(hsv_image, lower_range_solid_balls, upper_range_solid_balls);
+    Mat mask_striped_balls = inRange(hsv_image, lower_range_striped_balls, upper_range_striped_balls);
+
+   
+    Mat combined_mask = mask_solid_balls | mask_striped_balls;
+
+    vector<vector<Point>> contours;
+    findContours(combined_mask, contours, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
+
+    for (size_t i = 0; i < contours.size(); i++) {
+        double area = contourArea(contours[i]);
+        if (area > 100 && area < 1000) {
+            balls.push_back(Vec3f(contours[i]));
+        }
+    }
+}
+
+void detectPlayingFieldBoundaries(Mat frame, vector<Vec4i>& lines) {
+    Mat gray_image;
+    cvtColor(frame, gray_image, COLOR_BGR2GRAY);
+
+  
+    Mat blurred_image;
+    GaussianBlur(gray_image, blurred_image, Size(5, 5), 0);
+
+    Mat edges;
+    Canny(blurred_image, edges, 50, 150);
+    HoughLinesP(edges, lines, 1, CV_PI / 180, 100, 100, 10);
+}
+
+
+void segmentPlayingField(Mat frame, vector<Vec4i>& lines, Mat& segmented_image) {
+    Mat mask = Mat::zeros(frame.size(), CV_8UC1);
+    for (size_t i = 0; i < lines.size(); i++) {
+        line(mask, Point(lines[i][0], lines[i][1]), Point(lines[i][2], lines[i][3]), Scalar(255), 2);
+    }
+
+    bitwise_and(frame, frame, segmented_image, mask);
+}
+
+void visualizeGameState(Mat frame, vector<Vec3f>& balls, Mat& visualization_map) {
+    visualization_map = Mat::zeros(frame.size(), CV_8UC3);
+
+    for (size_t i = 0; i < balls.size(); i++) {
+        circle(visualization_map, Point(balls[i][0], balls[i][1]), 5, Scalar(0, 0, 255), -1);
+    }
+
+    for (size_t i = 0; i < balls.size() - 1; i++) {
+        line(visualization_map, Point(balls[i][0], balls[i][1]), Point(balls[i + 1][0], balls[i + 1][1]), Scalar(0, 255, 0), 2);
+    }
+}
+
+int main() {
+
+    VideoCapture cap("billiard_video.mp4");
+
+    if (!cap.isOpened()) {
+        cout << "Error: Unable to open video file" << endl;
+        return -1;
+    }
+
+    double dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH);
+    double dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT);
+    cout << "Resolution of the video: " << dWidth << " x " << dHeight << endl;
+
+    string window_name = "Billiard Video Analysis";
+    namedWindow(window_name, WINDOW_NORMAL);
+
+    Mat frame;
+    while (true) {
+        bool bSuccess = cap.read(frame);
+        if (!bSuccess) {
+            cout << "Video is completed" << endl;
+            break;
+        }
+
+        imshow(window_name, frame);
+
+        if (waitKey(10) == 27) {
+            cout << "Esc key is pressed by user. Stopping the video" << endl;
+            break;
+        }
+    }
+
+    cap.release();
+    destroyAllWindows();
+
+    return 0;
+}
+   
