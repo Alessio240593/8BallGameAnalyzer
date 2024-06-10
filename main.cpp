@@ -82,9 +82,9 @@ cv::Scalar getColor(Classification classification)
     }
 }
 
-void drawFieldAndBalls(cv::Mat& image, const std::vector<std::vector<cv::Point>>& field, const std::vector<Ball>& balls, const cv::Rect& boundingBox)
+void drawFieldAndBalls(cv::Mat& image, const std::vector<Ball>& balls, const cv::Rect& boundingBox)
 {
-    cv::fillPoly(image, field, cv::Scalar(0, 100, 0));
+    cv::rectangle(image, boundingBox, cv::Scalar(0, 100, 0), -1);
 
     for (const auto& ball : balls) {
         cv::Point originalCenter(ball.center.x + boundingBox.x, ball.center.y + boundingBox.y);
@@ -95,13 +95,16 @@ void drawFieldAndBalls(cv::Mat& image, const std::vector<std::vector<cv::Point>>
     }
 }
 
-void createMinimap(cv::Mat image, std::vector<std::vector<cv::Point>> hulls, std::vector<Ball> balls, cv::Rect boundingBox) {
+void createMinimap(const cv::Mat& image, const std::vector<Ball>& balls, cv::Rect boundingBox) {
     int frameHeight = image.rows;
     int frameWidth = image.cols;
 
     cv::Mat miniMap = cv::Mat::zeros(cv::Size(frameWidth, frameHeight), CV_8UC3);
+    miniMap = cv::Scalar(255, 255, 255);
 
-    drawFieldAndBalls(miniMap, hulls, balls, boundingBox);
+    drawFieldAndBalls(miniMap, balls, boundingBox);
+
+    cv::rectangle(miniMap, cv::Point(0, 0), cv::Point(miniMap.cols - 1, miniMap.rows - 1), cv::Scalar(0, 0, 0), 50);
 
     cv::Mat resizedMiniMap;
     cv::resize(miniMap, resizedMiniMap, cv::Size(), 0.25, 0.25);
@@ -224,7 +227,7 @@ void processFrame(cv::Mat image)
             }
         }
 
-        createMinimap(image, hulls, balls, boundingBox);
+        createMinimap(image, balls, boundingBox);
 
         cv::imshow("Billiard Video Analysis", image);
     }
@@ -233,7 +236,7 @@ void processFrame(cv::Mat image)
 int main()
 {
     cv::VideoCapture cap;
-    cap.open("../Images/game1_clip2.mp4");
+    cap.open("../Images/game1_clip1.mp4");
 
     if (!cap.isOpened()) {
         std::cout << "Error: Unable to open video file" << std::endl;
