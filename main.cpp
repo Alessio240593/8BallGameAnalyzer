@@ -32,7 +32,7 @@ Classification classifyBall(cv::Mat& img, cv::Point center, float radius, std::v
     cv::cvtColor(roi, roi_gray, cv::COLOR_BGR2GRAY);
 
     cv::Mat filtered;
-    cv::GaussianBlur(roi_gray, filtered, cv::Size(3, 3), 3);
+    cv::bilateralFilter(roi_gray, filtered, 22, 75, 75);
 
     cv::Mat mask_white;
     cv::inRange(filtered, cv::Scalar(180), cv::Scalar(255), mask_white);
@@ -96,10 +96,7 @@ void drawFieldAndBalls(cv::Mat& image, const std::vector<Ball>& balls, const cv:
 }
 
 void createMinimap(const cv::Mat& image, const std::vector<Ball>& balls, cv::Rect boundingBox) {
-    int frameHeight = image.rows;
-    int frameWidth = image.cols;
-
-    cv::Mat miniMap = cv::Mat::zeros(cv::Size(frameWidth, frameHeight), CV_8UC3);
+    cv::Mat miniMap = cv::Mat::zeros(cv::Size( image.cols, image.rows), CV_8UC3);
     miniMap = cv::Scalar(255, 255, 255);
 
     drawFieldAndBalls(miniMap, balls, boundingBox);
@@ -107,12 +104,9 @@ void createMinimap(const cv::Mat& image, const std::vector<Ball>& balls, cv::Rec
     cv::rectangle(miniMap, cv::Point(0, 0), cv::Point(miniMap.cols - 1, miniMap.rows - 1), cv::Scalar(0, 0, 0), 50);
 
     cv::Mat resizedMiniMap;
-    cv::resize(miniMap, resizedMiniMap, cv::Size(), 0.25, 0.25);
+    cv::resize(miniMap, resizedMiniMap, cv::Size(), 0.3, 0.3);
 
-    int miniMapHeight = resizedMiniMap.rows;
-    int miniMapWidth = resizedMiniMap.cols;
-
-    cv::Rect miniMapRect(0, frameHeight - miniMapHeight, miniMapWidth, miniMapHeight);
+    cv::Rect miniMapRect(0, image.rows -  resizedMiniMap.rows, resizedMiniMap.cols, resizedMiniMap.rows);
     cv::Mat miniMapRegion = image(miniMapRect);
     resizedMiniMap.copyTo(miniMapRegion);
 }
@@ -148,7 +142,7 @@ void processFrame(cv::Mat image)
             filteredLines.push_back(line);
     }
 
-    std::vector<cv::Point2f> points;
+    std::vector<cv::Point> points;
     for (size_t i = 0; i < filteredLines.size(); i++) {
         for (size_t j = i + 1; j < filteredLines.size(); j++) {
             cv::Point2f pt = computeIntersection(filteredLines[i], filteredLines[j]);
@@ -158,17 +152,10 @@ void processFrame(cv::Mat image)
     }
 
     std::vector<cv::Point> hull;
-    if (!points.empty()) {
-        std::vector<cv::Point> intPoints(points.size());
-
-        for (size_t i = 0; i < points.size(); i++)
-            intPoints[i] = points[i];
-
-        cv::convexHull(intPoints, hull);
-    }
+    if (!points.empty())
+        cv::convexHull(points, hull);
 
     cv::Scalar borderColor(0, 255, 255);
-
     int thickness = 2;
 
     if (!hull.empty()) {
@@ -236,7 +223,7 @@ void processFrame(cv::Mat image)
 int main()
 {
     cv::VideoCapture cap;
-    cap.open("../Images/game1_clip1.mp4");
+    cap.open("../Images/game1_clip2.mp4");
 
     if (!cap.isOpened()) {
         std::cout << "Error: Unable to open video file" << std::endl;
