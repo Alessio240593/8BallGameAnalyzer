@@ -18,7 +18,7 @@
 ![Demo](billard.gif)
 
 ## Features
-- Track shot accuracy
+- Track the trajectory (BETA version)
 - Analyze ball position and patterns
 - Provide strategic suggestions based on game state
 
