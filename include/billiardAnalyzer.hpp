@@ -4,7 +4,7 @@
  * Copyright (C) 2024  Alessio Zattoni
  *
  * Author: Alessio Zattoni
- * Date: TODO
+ * Date: 18/07/2024
  * Version: 1.0.0
  *
  * This file is part of 8BallGameAnalyzer.
@@ -34,7 +34,7 @@
 
 namespace billiardAnalyzer {
     /**
-    * This class rapresent a ball in the eight ball pool game
+    * This class represent a ball in the eight ball pool game
     */
     class Ball {
     public:
@@ -165,7 +165,7 @@ namespace billiardAnalyzer {
          * @param b - second ball category
          * @return true if the first category comes before the second ones, false otherwise
          */
-        static bool compareBallsByClassification(billiardAnalyzer::Ball a, billiardAnalyzer::Ball b);
+        static bool compareBallsByClassification(const billiardAnalyzer::Ball& a, const billiardAnalyzer::Ball& b);
 
         /**
          * Classifies the balls with respect to their category (see Ball::Classification)
@@ -196,7 +196,7 @@ namespace billiardAnalyzer {
     };
 
     /**
-     * This class rapresent the pool table in the eight ball pool game
+     * This class represent the pool table in the eight ball pool game
      */
     class PoolTable {
     public:
@@ -261,10 +261,10 @@ namespace billiardAnalyzer {
         void setColor(cv::Scalar color);
 
         /**
-         * Creates an images that will cointain only the pool table
+         * Creates an images that will contain only the pool table
          *
          * @param image - images from which the pool table will be extracted
-         * @return the images that rappresent the pool table
+         * @return the images that represent the pool table
          */
         cv::Mat getPoolTableImage(cv::Mat &image);
 
@@ -287,7 +287,7 @@ namespace billiardAnalyzer {
     };
 
     /**
-     * This class rappresent the eight ball pool game
+     * This class represent the eight ball pool game
      */
     class EightBallPoolGame {
     public:
@@ -382,13 +382,17 @@ namespace billiardAnalyzer {
          * @param showBallsDetection - the option to show the balls in the video/images
          * @param showSegmentation - the option to show the segmentation in the video/images
          * @param showMinimap - the option to show the minimap in the video/images
+         * @param pathToGtmAP - the option to calculate the mAp whit given gt file
+         * @param pathToMaskmIoU - the option to calculate mIoU with give mask image
          * @return
          */
         static void analyzingEightBallPoolGame(const std::string& path,
                                                bool showTable,
                                                bool showBalls,
                                                bool showSegmentation,
-                                               bool showMinimap);
+                                               bool showMinimap,
+                                               const std::string& pathToGtmAP = "",
+                                               const std::string& pathToMaskmIoU = "");
 
         /**
          * Create a gray scale segmentation mask with following pixel value:
@@ -411,17 +415,17 @@ namespace billiardAnalyzer {
         PoolTable poolTable;
 
         /**
-         * Prints the balls informations:
+         * Prints the balls information:
          * 1)ordinate of the top left corner
          * 2)abscissa of the top left corner
          * 3)the box width
          * 4)the box height
          * 5)the ball category
          *
-         * @param balls - the balls of which you would like to print the informations
+         * @param balls - the balls of which you would like to print the information
          *@return
          */
-        void printBallsInformations();
+        void printBallsInformation();
 
         /**
          * Filters the contours in order to keep only the balls ones
@@ -440,12 +444,16 @@ namespace billiardAnalyzer {
          * @param showBallsDetection - the option to show the balls in the video
          * @param showSegmentation - the option to show the segmentation in the video
          * @param showMinimap - the option to show the minimap in the video
+         * @param pathToGtmAP - the option to calculate the mAp whit given gt file
+         * @param pathToMaskmIoU - the option to calculate mIoU with give mask image
          */
         static void processVideo(const std::string& path,
                                  bool showTableDetection,
                                  bool showBallsDetection,
                                  bool showSegmentation,
-                                 bool showMinimap);
+                                 bool showMinimap,
+                                 const std::string& pathToGtmAP,
+                                 const std::string& pathToMaskmIoU);
 
         /**
          * Process a images of the eight ball pool game
@@ -455,26 +463,31 @@ namespace billiardAnalyzer {
          * @param showBallsDetection - the option to show the balls in the images
          * @param showSegmentation - the option to show the segmentation in the images
          * @param showMinimap - the option to show the minimap in the images
+         * @param pathToGtmAP - the option to calculate the mAp whit given gt file
+         * @param pathToMaskmIoU - the option to calculate mIoU with give mask image
          */
         static void processImage(const std::string& path,
                                  bool showTableDetection,
                                  bool showBallsDetection,
                                  bool showSegmentation,
-                                 bool showMinimap);
+                                 bool showMinimap,
+                                 const std::string& pathToGtmAP,
+                                 const std::string& pathToMaskmIoU);
 
-        // TODO
         /**
          * Executes the analysis of the eight ball pool game
          *
          * @param frame - the current frame
          * @param previousFrame - the previous frame
          * @param previousPositions - the position of the ball in the previous frame
-         * @param mask -
+         * @param mask - the mask with the trajectory
          * @param eightBallPoolGame - the eight ball pool game object
          * @param showTableDetection - the option to show the table in the images
          * @param showBallsDetection - the option to show the balls in the images
          * @param showSegmentation - the option to show the segmentation in the images
          * @param showMinimap - the option to show the minimap in the images
+         * @param pathToGtmAP - the option to calculate the mAp whit given gt file
+         * @param pathToMaskmIoU - the option to calculate mIoU with give mask image
          */
         static void executeAnalysis(cv::Mat& frame,
                                     cv::Mat& previousFrame,
@@ -484,7 +497,9 @@ namespace billiardAnalyzer {
                                     bool showTableDetection,
                                     bool showBallsDetection,
                                     bool showSegmentation,
-                                    bool showMinimap);
+                                    bool showMinimap,
+                                    const std::string& pathToGtmAP,
+                                    const std::string& pathToMaskmIoU);
 
         /**
          * Tries to detect the pool table in the frame
@@ -530,7 +545,7 @@ namespace billiardAnalyzer {
         /**
          * Segments the area inside the pool table
          *
-         * @param image - the images where sshow the segmentations
+         * @param image - the images where show the segmentations
          */
         void segmentsImage(cv::Mat& image);
 
@@ -708,15 +723,6 @@ namespace billiardAnalyzer {
     class Utility {
     public:
         /**
-         * Computes the intersection between the two vectors passed as parameters
-         *
-         * @param a - first vector of points
-         * @param b - second vector of points
-         * @return the intersection of two vectors
-         */
-        static cv::Point2f computeIntersection(cv::Vec4i a, cv::Vec4i b);
-
-        /**
          * Checks if hsvPixel is in the ranges passed as parameters
          *
          * @param lowerRange - lower range used in the comparison
@@ -748,7 +754,7 @@ namespace billiardAnalyzer {
          * Converts string to bool
          *
          * @param str - string to convert
-         * @return the boolean rapresentation of string
+         * @return the boolean representation of string
          */
         static bool stringToBool(const std::string& str);
 
@@ -770,6 +776,8 @@ namespace billiardAnalyzer {
          * @param showBallsDetection - the option to show the balls in the video/images
          * @param showSegmentation - the option to show the segmentation in the video/images
          * @param showMinimap - the option to show the minimap in the video/images
+         * @param pathToGtmAP - the option to calculate the mAp whit given gt file
+         * @param pathToMaskmIoU - the option to calculate mIoU with give mask image
          */
         static void parseCommandLineArguments(int argc,
                                               char **argv,
@@ -777,14 +785,16 @@ namespace billiardAnalyzer {
                                               bool& showTableDetection,
                                               bool& showBallsDetection,
                                               bool& showSegmentation,
-                                              bool& showMinimap);
+                                              bool& showMinimap,
+                                              std::string& pathToGtmAP,
+                                              std::string& pathToMaskmIoU);
 
-        // TODO
         /**
-         * Creates and draws the minimap that rapresents the play
+         * Creates and draws the minimap that represent the play
          *
          * @param image - the images where draw the minimap
-         * @param eightBallPoolGame - the object that rapresent the game
+         * @param mask - the mask with the trajectories
+         * @param eightBallPoolGame - the object that represent the game
          * @return
          */
         static void createMinimap(const cv::Mat& image,
