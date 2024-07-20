@@ -4,7 +4,7 @@
  * Copyright (C) 2024 Alessio Zattoni
  *
  * Author: Alessio Zattoni
- * Date: TODO
+ * Date: 18/07/2024
  * Version: 1.0.0
  *
  * This file is part of 8BallGameAnalyzer.
@@ -60,15 +60,15 @@ namespace billiardAnalyzer
         this->poolTable = poolTable;
     }
 
-    void EightBallPoolGame::printBallsInformations()
+    void EightBallPoolGame::printBallsInformation()
     {
-        if (!balls.empty())
-        {
+        if (!balls.empty()) {
             std::sort(balls.begin(), balls.end(), Ball::compareBallsByClassification);
 
             for (billiardAnalyzer::Ball& ball : balls) {
                 int radius = std::ceil(ball.getRadius());
-                std::cout << (ball.getCenter().x) - radius << " " << (ball.getCenter().y) - radius << " " << radius * 2 << " " << radius * 2 << " " << static_cast<int>(ball.getClassification()) << std::endl;
+                std::cout <<
+                (ball.getCenter().x) - radius << " " << (ball.getCenter().y) - radius << " " << radius * 2 << " " << radius * 2 << " " << static_cast<int>(ball.getClassification()) << std::endl;
             }
 
             std::cout << std::endl;
@@ -81,7 +81,9 @@ namespace billiardAnalyzer
                                          bool showTableDetection,
                                          bool showBallsDetection,
                                          bool showSegmentation,
-                                         bool showMinimap)
+                                         bool showMinimap,
+                                         const std::string& pathToGtmAP,
+                                         const std::string& pathToMaskmIoU)
     {
         cv::VideoCapture cap;
         cap.open(path);
@@ -113,7 +115,17 @@ namespace billiardAnalyzer
                 break;
             }
 
-            executeAnalysis(frame, previousFrame, previousPositions, mask, eightBallPoolGame.get(), showTableDetection, showBallsDetection, showSegmentation, showMinimap);
+            executeAnalysis(frame,
+                            previousFrame,
+                            previousPositions,
+                            mask,
+                            eightBallPoolGame.get(),
+                            showTableDetection,
+                            showBallsDetection,
+                            showSegmentation,
+                            showMinimap,
+                            pathToGtmAP,
+                            pathToMaskmIoU);
 
             cv::imshow(windowName, frame);
 
@@ -133,7 +145,9 @@ namespace billiardAnalyzer
                                          bool showTableDetection,
                                          bool showBallsDetection,
                                          bool showSegmentation,
-                                         bool showMinimap)
+                                         bool showMinimap,
+                                         const std::string& pathToGtmAP,
+                                         const std::string& pathToMaskmIoU)
     {
         cv::Mat frame = cv::imread(path);
 
@@ -151,7 +165,17 @@ namespace billiardAnalyzer
         cv::Mat mask;
         cv::Mat previousFrame;
 
-        executeAnalysis(frame, previousFrame, previous_positions, mask, eightBallPoolGame.get(), showTableDetection, showBallsDetection, showSegmentation, showMinimap);
+        executeAnalysis(frame,
+                        previousFrame,
+                        previous_positions,
+                        mask,
+                        eightBallPoolGame.get(),
+                        showTableDetection,
+                        showBallsDetection,
+                        showSegmentation,
+                        showMinimap,
+                        pathToGtmAP,
+                        pathToMaskmIoU);
 
         cv::imshow(windowName, frame);
         cv::waitKey(0);
@@ -165,22 +189,23 @@ namespace billiardAnalyzer
                                             bool showTableDetection,
                                             bool showBallsDetection,
                                             bool showSegmentation,
-                                            bool showMinimap)
+                                            bool showMinimap,
+                                            const std::string& pathToGtmAP,
+                                            const std::string& pathToMaskmIoU)
     {
         billiardAnalyzer::PoolTable table = eightBallPoolGame->getPoolTable();
 
         if (table.getVertices().empty())
             eightBallPoolGame->detectPoolTable(frame);
 
-        std::vector<billiardAnalyzer::Ball> balls = eightBallPoolGame->detectBalls(frame, 85, 3);
+        std::vector<billiardAnalyzer::Ball> balls = eightBallPoolGame->detectBalls(frame, 65, 15);
 
         /* pool table detection */
         if (showTableDetection)
             eightBallPoolGame->getPoolTable().drawPoolTable(frame);
 
         /* ball detection */
-        if (showBallsDetection)
-        {
+        if (showBallsDetection) {
             for (billiardAnalyzer::Ball ball : balls)
                 ball.drawBallBox(frame);
         }
@@ -203,50 +228,68 @@ namespace billiardAnalyzer
             billiardAnalyzer::Utility::createMinimap(frame, mask, *eightBallPoolGame);
 
         /* info */
-//        eightBallPoolGame->printBallsInformations();
-//
-//        /* calculate mIoU */
-//        cv::Mat groundTruth = cv::imread("../Resources/masks/frame_last.png", cv::IMREAD_GRAYSCALE);
-//        float mIoU = Utility::computeMIoU(frame, groundTruth, eightBallPoolGame);
-//        std::cout << "Mean IoU: " << std::fixed << std::setprecision(2) << mIoU * 100<< std::endl;
-//
-//        /* calculate mAP */
-//        std::ifstream inputFile("../Resources/gt/frame_last_bbox.txt");
-//        if (!inputFile) {
-//            std::cerr << "Errore nell'apertura del file." << std::endl;
-//            return;
-//        }
-//
-//       std::vector<Detection> groundTruthBalls, predictedBalls;
-//
-//       Utility::prepareDetectionStructure(inputFile,
-//                                          groundTruthBalls,
-//                                          balls,
-//                                          predictedBalls);
-//
-//        float mAP = Utility::calculatemAP(groundTruthBalls, predictedBalls);
-//
-//        std::cout << "Mean Average Precision (mAP): " << std::fixed << std::setprecision(2) << mAP * 100 << "%" << std::endl;
+//        eightBallPoolGame->printBallsInformation();
+
+        /* calculate mIoU */
+        if (!pathToMaskmIoU.empty()) {
+            cv::Mat groundTruth = cv::imread(pathToMaskmIoU, cv::IMREAD_GRAYSCALE);
+            float mIoU = Utility::computeMIoU(frame, groundTruth, eightBallPoolGame);
+            std::cout << "Mean IoU: " << std::fixed << std::setprecision(2) << mIoU * 100<< std::endl;
+        }
+
+        /* calculate mAP */
+        if (!pathToGtmAP.empty()) {
+            std::ifstream inputFile(pathToGtmAP);
+            if (!inputFile) {
+                std::cerr << "Error file not found" << std::endl;
+                return;
+            }
+
+            std::vector<Detection> groundTruthBalls, predictedBalls;
+
+            Utility::prepareDetectionStructure(inputFile,
+                                               groundTruthBalls,
+                                               balls,
+                                               predictedBalls);
+
+            float mAP = Utility::calculatemAP(groundTruthBalls, predictedBalls);
+
+            std::cout << "Mean Average Precision (mAP): " << std::fixed << std::setprecision(2) << mAP * 100 << "%" << std::endl;
+        }
     }
 
     void EightBallPoolGame::analyzingEightBallPoolGame(int argc, char** argv)
     {
-        if (argc == 1)
-        {
+        if (argc == 1) {
             Utility::printUsage();
             throw std::invalid_argument("An images or video is required, use path option for this purpose");
         }
-        else
-        {
+        else {
             std::string path;
             bool showTableDetection = false;
             bool showBallsDetection = false;
             bool showSegmentation = false;
             bool showMinimap = false;
+            std::string pathToGtmAP;
+            std::string pathToMaskmIoU;
 
-            billiardAnalyzer::Utility::parseCommandLineArguments(argc, argv, path, showTableDetection, showBallsDetection, showSegmentation, showMinimap);
+            billiardAnalyzer::Utility::parseCommandLineArguments(argc,
+                                                                 argv,
+                                                                 path,
+                                                                 showTableDetection,
+                                                                 showBallsDetection,
+                                                                 showSegmentation,
+                                                                 showMinimap,
+                                                                 pathToGtmAP,
+                                                                 pathToMaskmIoU);
 
-            analyzingEightBallPoolGame(path, showTableDetection, showBallsDetection, showSegmentation, showMinimap);
+            analyzingEightBallPoolGame(path,
+                                       showTableDetection,
+                                       showBallsDetection,
+                                       showSegmentation,
+                                       showMinimap,
+                                       pathToGtmAP,
+                                       pathToMaskmIoU);
         }
     }
 
@@ -254,13 +297,27 @@ namespace billiardAnalyzer
                                                        bool showTableDetection,
                                                        bool showBallsDetection,
                                                        bool showSegmentation,
-                                                       bool showMinimap)
+                                                       bool showMinimap,
+                                                       const std::string& pathToGtmAP,
+                                                       const std::string& pathToMaskmIoU)
     {
         if (billiardAnalyzer::Utility::isImageFile(path))
-            processImage(path, showTableDetection, showBallsDetection, showSegmentation, showMinimap);
+            processImage(path,
+                         showTableDetection,
+                         showBallsDetection,
+                         showSegmentation,
+                         showMinimap,
+                         pathToGtmAP,
+                         pathToMaskmIoU);
 
         else if (billiardAnalyzer::Utility::isVideoFile(path))
-            processVideo(path, showTableDetection, showBallsDetection, showSegmentation, showMinimap);
+            processVideo(path,
+                         showTableDetection,
+                         showBallsDetection,
+                         showSegmentation,
+                         showMinimap,
+                         pathToGtmAP,
+                         pathToMaskmIoU);
         else
             throw std::invalid_argument("The path isn't an images or video");
     }
@@ -315,17 +372,43 @@ namespace billiardAnalyzer
 
         cv::Mat nonZeroMask = (bgrPlanes[0] > 20) & (bgrPlanes[1] > 20) & (bgrPlanes[2] > 20);
 
-        cv::calcHist(&bgrPlanes[0], 1, nullptr, nonZeroMask, bHist, 1, &histSize, &histRange, true, false);
-        cv::calcHist(&bgrPlanes[1], 1, nullptr, nonZeroMask, gHist, 1, &histSize, &histRange, true, false);
-        cv::calcHist(&bgrPlanes[2], 1, nullptr, nonZeroMask, rHist, 1, &histSize, &histRange, true, false);
+        cv::calcHist(&bgrPlanes[0],
+                     1,
+                     nullptr,
+                     nonZeroMask,
+                     bHist,
+                     1, &histSize,
+                     &histRange,
+                     true,
+                     false);
 
-        // Trova il valore moda per ciascun canale
+        cv::calcHist(&bgrPlanes[1],
+                     1,
+                     nullptr,
+                     nonZeroMask,
+                     gHist,
+                     1,
+                     &histSize,
+                     &histRange,
+                     true,
+                     false);
+
+        cv::calcHist(&bgrPlanes[2],
+                     1,
+                     nullptr,
+                     nonZeroMask,
+                     rHist,
+                     1,
+                     &histSize,
+                     &histRange,
+                     true,
+                     false);
+
         cv::Point maxLocB, maxLocG, maxLocR;
         cv::minMaxLoc(bHist, nullptr, nullptr, nullptr, &maxLocB);
         cv::minMaxLoc(gHist, nullptr, nullptr, nullptr, &maxLocG);
         cv::minMaxLoc(rHist, nullptr, nullptr, nullptr, &maxLocR);
 
-        // Combina i valori moda dei singoli canali
         cv::Vec3b modeColor(maxLocB.y, maxLocG.y, maxLocR.y);
 
         this->getPoolTable().setColor(cv::Scalar (maxLocB.y, maxLocG.y, maxLocR.y));
@@ -333,8 +416,7 @@ namespace billiardAnalyzer
         return modeColor;
     }
 
-    std::vector<cv::Point> EightBallPoolGame::detectPoolTable(cv::Mat& image,
-                                                              int tolerance)
+    std::vector<cv::Point> EightBallPoolGame::detectPoolTable(cv::Mat& image, int tolerance)
     {
         if (image.empty())
             throw std::invalid_argument("Image should not be empty");
@@ -393,8 +475,14 @@ namespace billiardAnalyzer
         cv::Vec3b exactColorHSV = exactColorBGRMat.at<cv::Vec3b>(0, 0);
 
         cv::Mat mask;
-        cv::Scalar lowerBound(exactColorHSV[0] - rangeTolerance, exactColorHSV[1] - rangeTolerance, exactColorHSV[2] - rangeTolerance);
-        cv::Scalar upperBound(exactColorHSV[0] + rangeTolerance, exactColorHSV[1] + rangeTolerance, exactColorHSV[2] + rangeTolerance);
+        cv::Scalar lowerBound(exactColorHSV[0] - rangeTolerance,
+                              exactColorHSV[1] - rangeTolerance,
+                              exactColorHSV[2] - rangeTolerance);
+
+        cv::Scalar upperBound(exactColorHSV[0] + rangeTolerance,
+                              exactColorHSV[1] + rangeTolerance,
+                              exactColorHSV[2] + rangeTolerance);
+
         cv::inRange(hsv, lowerBound, upperBound, mask);
 
         cv::Mat kernel2 = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(morphCloseSize, morphCloseSize));
@@ -462,8 +550,14 @@ namespace billiardAnalyzer
         cv::Vec3b exactColorHSV = exactColorBGRMat.at<cv::Vec3b>(0, 0);
 
         cv::Mat mask;
-        cv::Scalar lowerBound(exactColorHSV[0] - rangeTolerance, exactColorHSV[1] - rangeTolerance, exactColorHSV[2] - rangeTolerance);
-        cv::Scalar upperBound(exactColorHSV[0] + rangeTolerance, exactColorHSV[1] + rangeTolerance, exactColorHSV[2] + rangeTolerance);
+        cv::Scalar lowerBound(exactColorHSV[0] - rangeTolerance,
+                              exactColorHSV[1] - rangeTolerance,
+                              exactColorHSV[2] - rangeTolerance);
+
+        cv::Scalar upperBound(exactColorHSV[0] + rangeTolerance,
+                              exactColorHSV[1] + rangeTolerance,
+                              exactColorHSV[2] + rangeTolerance);
+
         cv::inRange(hsv, lowerBound, upperBound, mask);
 
         cv::Mat kernel2 = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(morphCloseSize, morphCloseSize));
@@ -541,7 +635,11 @@ namespace billiardAnalyzer
         cv::fillConvexPoly(destImage, this->getPoolTable().getVertices(), 5);
 
         for (Ball ball : this->getBalls())
-            cv::circle(destImage, ball.getCenter(), ball.getRadius(), static_cast<int>(ball.getClassification()), -1);
+            cv::circle(destImage,
+                       ball.getCenter(),
+                       ball.getRadius(),
+                       static_cast<int>(ball.getClassification()),
+                       -1);
     }
 
     void EightBallPoolGame::calculateBallsTrajectory(cv::Mat& frame,
@@ -565,7 +663,15 @@ namespace billiardAnalyzer
         std::vector<cv::Point2f> newBallPositions;
         std::vector<uchar> status;
         std::vector<float> err;
-        cv::calcOpticalFlowPyrLK(previousFrameGray, frameGray, previousBallsPositions, newBallPositions, status, err, winSize, maxLevel, criteria);
+        cv::calcOpticalFlowPyrLK(previousFrameGray,
+                                 frameGray,
+                                 previousBallsPositions,
+                                 newBallPositions,
+                                 status,
+                                 err,
+                                 winSize,
+                                 maxLevel,
+                                 criteria);
 
         std::set<int> assignedIndices;
         for (size_t i = 0; i < newBallPositions.size(); i++) {
@@ -587,7 +693,11 @@ namespace billiardAnalyzer
                         assignedIndices.insert(closestBallIndex);
 
                         if (previousPositions.find(closestBallIndex) != previousPositions.end())
-                            cv::line(mask, previousPositions[closestBallIndex], newBallPositions[i], trajectoryColor, 2);
+                            cv::line(mask,
+                                     previousPositions[closestBallIndex],
+                                     newBallPositions[i],
+                                     trajectoryColor,
+                                     2);
 
                         previousPositions[closestBallIndex] = newBallPositions[i];
                     }
