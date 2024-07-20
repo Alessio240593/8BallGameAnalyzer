@@ -6,7 +6,11 @@
 int main(int argc, char** argv)
 {
     try {
-        billiardAnalyzer::EightBallPoolGame::analyzingEightBallPoolGame("../Resources/videos/game2_clip2.mp4", true, true, false, true);
+        billiardAnalyzer::EightBallPoolGame::analyzingEightBallPoolGame("../Resources/videos/game1_clip2.mp4",
+                                                                        true,
+                                                                        true,
+                                                                        false,
+                                                                        true);
     } catch (const std::invalid_argument & e) {
         std::cerr << e.what() << std::endl;
         exit(EXIT_FAILURE);
