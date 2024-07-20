@@ -175,7 +175,6 @@ namespace billiardAnalyzer
                       rectColor,
                       cv::FILLED);
 
-
         cv::addWeighted(overlay, ballBoxInnerGradient, image, 1 - ballBoxInnerGradient, 0, image);
 
         cv::rectangle(image,
