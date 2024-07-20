@@ -4,7 +4,7 @@
  * Copyright (C) 2024 Alessio Zattoni
  *
  * Author: Alessio Zattoni
- * Date: TODO
+ * Date: 18/07/2024
  * Version: 1.0.0
  *
  * This file is part of 8BallGameAnalyzer.
@@ -25,6 +25,8 @@
  */
 
 
+#include <utility>
+
 #include "billiardAnalyzer.hpp"
 
 namespace billiardAnalyzer {
@@ -41,7 +43,7 @@ namespace billiardAnalyzer {
 
     void PoolTable::setVertices(std::vector<cv::Point> vertices)
     {
-        this->vertices = vertices;
+        this->vertices = std::move(vertices);
     }
 
     cv::Scalar PoolTable::getColor() const
@@ -51,7 +53,7 @@ namespace billiardAnalyzer {
 
     void PoolTable::setColor(cv::Scalar color)
     {
-        this->color = color;
+        this->color = std::move(color);
     }
 
     cv::Mat PoolTable::getPoolTableImage(cv::Mat& image)
