@@ -4,7 +4,7 @@
  * Copyright (C) 2024 Alessio Zattoni
  *
  * Author: Alessio Zattoni
- * Date: TODO
+ * Date: 18/07/2024
  * Version: 1.0.0
  *
  * This file is part of 8BallGameAnalyzer.

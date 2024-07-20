@@ -4,7 +4,7 @@
  * Copyright (C) 2024 Alessio Zattoni
  *
  * Author: Alessio Zattoni
- * Date: TODO
+ * Date: 18/07/2024
  * Version: 1.0.0
  *
  * This file is part of 8BallGameAnalyzer.
@@ -99,7 +99,7 @@ namespace billiardAnalyzer
         }
     }
 
-    bool Ball::compareBallsByClassification(billiardAnalyzer::Ball a, billiardAnalyzer::Ball b)
+    bool Ball::compareBallsByClassification(const billiardAnalyzer::Ball& a, const billiardAnalyzer::Ball& b)
     {
         return static_cast<int>(a.getClassification()) < static_cast<int>(b.getClassification());
     }

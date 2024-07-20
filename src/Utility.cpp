@@ -4,7 +4,7 @@
  * Copyright (C) 2024 Alessio Zattoni
  *
  * Author: Alessio Zattoni
- * Date: TODO
+ * Date: 18/07/2024
  * Version: 1.0.0
  *
  * This file is part of 8BallGameAnalyzer.
@@ -30,17 +30,6 @@
 
 namespace billiardAnalyzer
 {
-    cv::Point2f Utility::computeIntersection(cv::Vec4i a, cv::Vec4i b)
-    {
-        cv::Point2f p(-1, -1);
-        auto denominator = static_cast<float>((a[0] - a[2]) * (b[1] - b[3]) - (a[1] - a[3]) * (b[0] - b[2]));
-        if (denominator != 0) {
-            p.x = static_cast<float>((a[0] * a[3] - a[1] * a[2]) * (b[0] - b[2]) - (a[0] - a[2]) * (b[0] * b[3] - b[1] * b[2])) / denominator;
-            p.y = static_cast<float>((a[0] * a[3] - a[1] * a[2]) * (b[1] - b[3]) - (a[1] - a[3]) * (b[0] * b[3] - b[1] * b[2])) / denominator;
-        }
-        return p;
-    }
-
     bool Utility::isInRange(const cv::Scalar& lowerRange,
                             const cv::Scalar& upperRange,
                             cv::Vec3b hsvPixel)
@@ -55,12 +44,14 @@ namespace billiardAnalyzer
                v >= lowerRange[2] && v <= upperRange[2];
     }
 
-    bool Utility::isVideoFile(const std::string& path) {
+    bool Utility::isVideoFile(const std::string& path)
+    {
         cv::VideoCapture cap(path);
         return cap.isOpened();
     }
 
-    bool Utility::isImageFile(const std::string& path) {
+    bool Utility::isImageFile(const std::string& path)
+    {
         cv::Mat image = cv::imread(path);
         return !image.empty();
     }
@@ -79,6 +70,8 @@ namespace billiardAnalyzer
         std::cout << "  -showBalls <true/false>         Show or hide ball detection (default: false)." << std::endl;
         std::cout << "  -showSegmentation <true/false>  Show or hide segmentation (default: false)." << std::endl;
         std::cout << "  -showMinimap <true/false>       Show or hide minimap (default: false)." << std::endl;
+        std::cout << "  -mAP <value>                    Specify the path to the ground truth file." << std::endl;
+        std::cout << "  -mIoU <value>                   Specify the path to the mask image." << std::endl;
         std::cout << std::endl;
     }
 
@@ -88,7 +81,9 @@ namespace billiardAnalyzer
                                             bool& showTableDetection,
                                             bool& showBallsDetection,
                                             bool& showSegmentation,
-                                            bool& showMinimap)
+                                            bool& showMinimap,
+                                            std::string& pathToGtmAP,
+                                            std::string& pathToMaskmIoU)
     {
         for (int i = 1; i < argc; i += 2) {
             std::string arg = argv[i];
@@ -113,8 +108,15 @@ namespace billiardAnalyzer
                 std::string value = argv[i + 1];
                 showMinimap = stringToBool(value);
             }
-            else
-            {
+            else if (arg == "-mAP" && i + 1 < argc) {
+                std::string value = argv[i + 1];
+                pathToGtmAP = value;
+            }
+            else if (arg == "-mIoU" && i + 1 < argc) {
+                std::string value = argv[i + 1];
+                pathToMaskmIoU = value;
+            }
+            else {
                 printUsage();
                 throw std::invalid_argument(arg + " isn't valid argument");
             }
@@ -139,7 +141,11 @@ namespace billiardAnalyzer
 
         drawPoolTableAndBalls(miniMap, eightBallPoolGame);
 
-        cv::rectangle(miniMap, cv::Point(0, 0), cv::Point(miniMap.cols - 1, miniMap.rows - 1), cv::Scalar(0, 0, 0), 50);
+        cv::rectangle(miniMap,
+                      cv::Point(0, 0),
+                      cv::Point(miniMap.cols - 1, miniMap.rows - 1),
+                      cv::Scalar(0, 0, 0),
+                      50);
 
         cv::Mat resizedMiniMap;
         cv::resize(miniMap, resizedMiniMap, cv::Size(), 0.3, 0.3);
@@ -153,8 +159,7 @@ namespace billiardAnalyzer
         cv::add(resizedMiniMap, resizedMask, miniMapRegion);
     }
 
-    void Utility::drawPoolTableAndBalls(cv::Mat& image,
-                                        EightBallPoolGame& eightBallPoolGame)
+    void Utility::drawPoolTableAndBalls(cv::Mat& image, EightBallPoolGame& eightBallPoolGame)
     {
         if (image.empty())
             throw std::invalid_argument("Image should not be empty");
