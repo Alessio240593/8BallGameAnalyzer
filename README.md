@@ -2,12 +2,15 @@
 
 ![GitHub repo size](https://img.shields.io/github/repo-size/Alessio240593/8BallGameAnalyzer)
 ![GitHub contributors](https://img.shields.io/github/contributors/Alessio240593/8BallGameAnalyzer)
-![GitHub stars](https://img.shields.io/github/stars/Alessio240593/8BallGameAnalyzer?style=social)
-![GitHub forks](https://img.shields.io/github/forks/Alessio240593/8BallGameAnalyzer?style=social)
+![GitHub stars](https://img.shields.io/github/stars/Alessio240593/8BallGameAnalyzer)
+![GitHub forks](https://img.shields.io/github/forks/Alessio240593/8BallGameAnalyzer)
 ![GitHub issues](https://img.shields.io/github/issues/Alessio240593/8BallGameAnalyzer)
 ![GitHub pull requests](https://img.shields.io/github/issues-pr/Alessio240593/8BallGameAnalyzer)
-![GitHub](https://img.shields.io/github/license/Alessio240593/8BallGameAnalyzer)
-![GitHub Workflow Status](https://img.shields.io/github/workflow/status/Alessio240593/8BallGameAnalyzer/CMake?label=build%20on%20Linux)
+![License](https://img.shields.io/badge/license-GPL%203.0-blue)
+
+![Linux Compatible](https://img.shields.io/badge/Linux-Compatible-brightgreen)
+![Windows In Progress](https://img.shields.io/badge/Windows-In%20Progress-yellow)
+![Mac OS In Progress](https://img.shields.io/badge/Mac%20OS-In%20Progress-yellow)
 ![C++](https://img.shields.io/badge/C++-11-blue)
 ![OpenCV](https://img.shields.io/badge/OpenCV-4.5.4-green)
 
